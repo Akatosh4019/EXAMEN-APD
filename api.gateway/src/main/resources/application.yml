@@ -1,0 +1,31 @@
+server:
+  port: 8030
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      routes:
+
+        - id: producto
+          uri: http://localhost:8080
+          predicates:
+            - Path=/api/productos/**
+          filters:
+            - StripPrefix=1
+
+        - id: cliente
+          uri: http://localhost:8082
+          predicates:
+            - Path=/api/clientes/**
+          filters:
+            - StripPrefix=1
+
+        - id: ventas
+          uri: http://localhost:8083
+          predicates:
+            - Path=/api/ventas/**
+          filters:
+            - StripPrefix=1
