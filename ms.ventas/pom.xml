@@ -15,9 +15,11 @@
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
         <quarkus.platform.version>3.34.1</quarkus.platform.version>
+
         <skipITs>true</skipITs>
         <surefire-plugin.version>3.5.4</surefire-plugin.version>
     </properties>
@@ -36,43 +38,43 @@
 
     <dependencies>
 
-        <!-- REST -->
+        <!-- 🔥 REST -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-rest</artifactId>
         </dependency>
 
-        <!-- JSON -->
+        <!-- 🔥 JSON -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-rest-jackson</artifactId>
         </dependency>
 
-        <!-- Hibernate ORM -->
+        <!-- 🔥 HIBERNATE ORM -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-hibernate-orm</artifactId>
         </dependency>
 
-        <!-- Panache -->
+        <!-- 🔥 PANACHE -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-hibernate-orm-rest-data-panache</artifactId>
         </dependency>
 
-        <!-- Validaciones -->
+        <!-- 🔥 VALIDACIONES -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-hibernate-validator</artifactId>
         </dependency>
 
-        <!-- PostgreSQL -->
+        <!-- 🔥 POSTGRESQL -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-jdbc-postgresql</artifactId>
         </dependency>
 
-        <!-- CDI -->
+        <!-- 🔥 CDI -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-arc</artifactId>
@@ -84,13 +86,25 @@
             <artifactId>quarkus-rest-client</artifactId>
         </dependency>
 
-        <!-- 🔥 CLAVE PARA JSON (ESTO TE FALTABA) -->
+        <!-- 🔥 REST CLIENT JACKSON -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-rest-client-jackson</artifactId>
         </dependency>
 
-        <!-- TEST -->
+        <!-- 🔥 RESILIENCIA / RESILIENCE4J -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-smallrye-fault-tolerance</artifactId>
+        </dependency>
+
+        <!-- 🔥 HEALTH CHECK -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-smallrye-health</artifactId>
+        </dependency>
+
+        <!-- 🔥 TEST -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-junit</artifactId>
@@ -108,6 +122,7 @@
     <build>
         <plugins>
 
+            <!-- 🔥 QUARKUS -->
             <plugin>
                 <groupId>${quarkus.platform.group-id}</groupId>
                 <artifactId>quarkus-maven-plugin</artifactId>
@@ -115,6 +130,7 @@
                 <extensions>true</extensions>
             </plugin>
 
+            <!-- 🔥 COMPILER -->
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${compiler-plugin.version}</version>
@@ -123,11 +139,13 @@
                 </configuration>
             </plugin>
 
+            <!-- 🔥 TEST -->
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${surefire-plugin.version}</version>
             </plugin>
 
+            <!-- 🔥 INTEGRATION TEST -->
             <plugin>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <version>${surefire-plugin.version}</version>
