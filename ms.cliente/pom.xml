@@ -71,6 +71,12 @@
             <artifactId>quarkus-arc</artifactId>
         </dependency>
 
+        <!-- HEALTH CHECK -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-smallrye-health</artifactId>
+        </dependency>
+
         <!-- TEST -->
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -83,15 +89,6 @@
             <artifactId>rest-assured</artifactId>
             <scope>test</scope>
         </dependency>
-
-        <!-- OPCIONAL: Lombok (solo si lo usas) -->
-        <!--
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        -->
 
     </dependencies>
 

@@ -45,7 +45,7 @@
             <artifactId>quarkus-rest-jackson</artifactId>
         </dependency>
 
-        <!-- JPA -->
+        <!-- JPA + PANACHE -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-hibernate-orm-panache</artifactId>
@@ -69,7 +69,13 @@
             <artifactId>quarkus-arc</artifactId>
         </dependency>
 
-        <!-- LOMBOK (solo si lo usas) -->
+        <!-- HEALTH CHECKS -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-smallrye-health</artifactId>
+        </dependency>
+
+        <!-- LOMBOK -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>

@@ -6,25 +6,32 @@ spring:
     name: api-gateway
 
   cloud:
+
+    consul:
+      host: localhost
+      port: 8500
+      discovery:
+        enabled: true
+
     gateway:
       routes:
 
         - id: producto
-          uri: http://localhost:8080
+          uri: lb://ms-producto
           predicates:
             - Path=/api/productos/**
           filters:
             - StripPrefix=1
 
         - id: cliente
-          uri: http://localhost:8082
+          uri: lb://ms-cliente
           predicates:
             - Path=/api/clientes/**
           filters:
             - StripPrefix=1
 
         - id: ventas
-          uri: http://localhost:8083
+          uri: lb://ms-ventas
           predicates:
             - Path=/api/ventas/**
           filters:
