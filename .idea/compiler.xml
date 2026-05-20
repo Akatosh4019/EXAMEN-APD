@@ -9,6 +9,7 @@
         <outputRelativeToContentRoot value="true" />
         <module name="ms.ventas" />
         <module name="api.gateway-v1" />
+        <module name="ms.auth" />
         <module name="ms.producto" />
         <module name="ms.cliente" />
       </profile>
@@ -21,6 +22,7 @@
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="api.gateway-v1" options="-parameters" />
       <module name="ms.alumnos" options="-parameters" />
+      <module name="ms.auth" options="-parameters" />
       <module name="ms.cliente" options="-parameters" />
       <module name="ms.producto" options="-parameters" />
       <module name="ms.ventas" options="-parameters" />
