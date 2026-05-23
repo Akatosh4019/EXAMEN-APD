@@ -2,11 +2,11 @@ package com.example.api.gateway_v1.security;
 
 import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.gateway.filter.GlobalFilter;
+import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
-import org.springframework.cloud.gateway.filter.GlobalFilter;
-import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import reactor.core.publisher.Mono;
 
 @Component
@@ -37,6 +37,13 @@ public class JwtAuthenticationFilter implements GlobalFilter {
 
             String username = claims.getSubject();
             String rol = claims.get("groups").toString();
+
+            String metodo = exchange.getRequest().getMethod().name();
+
+            if (!metodo.equals("GET") && !rol.contains("ROLE_ADMIN")) {
+                exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
+                return exchange.getResponse().setComplete();
+            }
 
             ServerWebExchange modifiedExchange = exchange.mutate()
                     .request(builder -> builder
