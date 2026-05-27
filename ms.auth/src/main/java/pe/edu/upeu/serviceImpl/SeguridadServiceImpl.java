@@ -11,6 +11,9 @@ import pe.edu.upeu.entity.*;
 import pe.edu.upeu.repository.*;
 import pe.edu.upeu.services.SeguridadService;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @ApplicationScoped
 public class SeguridadServiceImpl implements SeguridadService {
 
@@ -98,5 +101,55 @@ public class SeguridadServiceImpl implements SeguridadService {
         rolPermisoRepository.persist(rolPermiso);
 
         return "Permiso asignado correctamente al rol";
+    }
+
+    @Override
+    @Transactional
+    public String crearPermisosDefault() {
+
+        crearPermisoSiNoExiste("LISTAR_PRODUCTOS", "GET", "/productos/**");
+        crearPermisoSiNoExiste("CREAR_PRODUCTOS", "POST", "/productos/**");
+        crearPermisoSiNoExiste("EDITAR_PRODUCTOS", "PUT", "/productos/**");
+        crearPermisoSiNoExiste("ELIMINAR_PRODUCTOS", "DELETE", "/productos/**");
+
+        crearPermisoSiNoExiste("LISTAR_CLIENTES", "GET", "/clientes/**");
+        crearPermisoSiNoExiste("CREAR_CLIENTES", "POST", "/clientes/**");
+        crearPermisoSiNoExiste("EDITAR_CLIENTES", "PUT", "/clientes/**");
+        crearPermisoSiNoExiste("ELIMINAR_CLIENTES", "DELETE", "/clientes/**");
+
+        crearPermisoSiNoExiste("LISTAR_VENTAS", "GET", "/ventas/**");
+        crearPermisoSiNoExiste("CREAR_VENTAS", "POST", "/ventas/**");
+        crearPermisoSiNoExiste("ELIMINAR_VENTAS", "DELETE", "/ventas/**");
+
+        crearPermisoSiNoExiste("CREAR_ROLES", "POST", "/auth/seguridad/roles");
+        crearPermisoSiNoExiste("CREAR_PERMISOS", "POST", "/auth/seguridad/permisos");
+        crearPermisoSiNoExiste("CREAR_PERMISOS_DEFAULT", "POST", "/auth/seguridad/permisos/default");
+        crearPermisoSiNoExiste("ASIGNAR_ROL_USUARIO", "POST", "/auth/seguridad/usuarios/asignar-rol");
+        crearPermisoSiNoExiste("ASIGNAR_PERMISO_ROL", "POST", "/auth/seguridad/roles/asignar-permiso");
+        crearPermisoSiNoExiste("VER_PERMISOS_ROL", "GET", "/auth/seguridad/roles/**/permisos");
+
+        return "Permisos default creados correctamente";
+    }
+
+    @Override
+    public List<String> listarPermisosPorRol(String nombreRol) {
+        return rolPermisoRepository.findByRolNombre(nombreRol)
+                .stream()
+                .map(rp -> rp.permiso.metodo + " " + rp.permiso.endpoint)
+                .collect(Collectors.toList());
+    }
+
+    private void crearPermisoSiNoExiste(String nombre, String metodo, String endpoint) {
+        Permiso existe = permisoRepository.find("nombre", nombre).firstResult();
+
+        if (existe == null) {
+            Permiso permiso = new Permiso();
+            permiso.nombre = nombre;
+            permiso.metodo = metodo;
+            permiso.endpoint = endpoint;
+            permiso.estado = true;
+
+            permisoRepository.persist(permiso);
+        }
     }
 }

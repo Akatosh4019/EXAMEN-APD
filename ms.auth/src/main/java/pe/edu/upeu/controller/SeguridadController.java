@@ -32,6 +32,18 @@ public class SeguridadController {
     }
 
     @POST
+    @Path("/permisos/default")
+    public String crearPermisosDefault() {
+        return seguridadService.crearPermisosDefault();
+    }
+
+    @GET
+    @Path("/roles/{nombreRol}/permisos")
+    public java.util.List<String> listarPermisosPorRol(@PathParam("nombreRol") String nombreRol) {
+        return seguridadService.listarPermisosPorRol(nombreRol);
+    }
+
+    @POST
     @Path("/usuarios/asignar-rol")
     public String asignarRolAUsuario(AsignarRolRequest request) {
         return seguridadService.asignarRolAUsuario(request);

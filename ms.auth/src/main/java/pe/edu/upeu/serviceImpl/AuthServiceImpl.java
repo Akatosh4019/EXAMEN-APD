@@ -5,15 +5,22 @@ import jakarta.inject.Inject;
 import pe.edu.upeu.dto.LoginRequest;
 import pe.edu.upeu.dto.LoginResponse;
 import pe.edu.upeu.entity.Usuario;
+import pe.edu.upeu.entity.UsuarioRol;
 import pe.edu.upeu.repository.UsuarioRepository;
+import pe.edu.upeu.repository.UsuarioRolRepository;
 import pe.edu.upeu.security.JwtService;
 import pe.edu.upeu.services.AuthService;
+
+import java.util.List;
 
 @ApplicationScoped
 public class AuthServiceImpl implements AuthService {
 
     @Inject
     UsuarioRepository usuarioRepository;
+
+    @Inject
+    UsuarioRolRepository usuarioRolRepository;
 
     @Inject
     JwtService jwtService;
@@ -35,8 +42,16 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Usuario inactivo");
         }
 
-        String token = jwtService.generarToken(usuario.username, usuario.rol);
+        List<UsuarioRol> rolesUsuario = usuarioRolRepository.findByUsuarioId(usuario.id);
 
-        return new LoginResponse(token, usuario.rol);
+        if (rolesUsuario == null || rolesUsuario.isEmpty()) {
+            throw new RuntimeException("El usuario no tiene roles asignados");
+        }
+
+        String rolPrincipal = rolesUsuario.get(0).rol.nombre;
+
+        String token = jwtService.generarToken(usuario.username, rolPrincipal);
+
+        return new LoginResponse(token, rolPrincipal);
     }
 }

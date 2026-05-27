@@ -30,6 +30,12 @@
             <artifactId>spring-cloud-starter-gateway</artifactId>
         </dependency>
 
+        <!-- WEBFLUX PARA WEBCLIENT -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+
         <!-- LOAD BALANCER -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>

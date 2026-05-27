@@ -9,11 +9,16 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 @Component
 public class JwtAuthenticationFilter implements GlobalFilter {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private PermisoClient permisoClient;
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -21,6 +26,10 @@ public class JwtAuthenticationFilter implements GlobalFilter {
         String path = exchange.getRequest().getURI().getPath();
 
         if (path.equals("/api/auth/login") || path.equals("/auth/login")) {
+            return chain.filter(exchange);
+        }
+
+        if (path.startsWith("/api/auth/seguridad/roles/") && path.endsWith("/permisos")) {
             return chain.filter(exchange);
         }
 
@@ -36,27 +45,71 @@ public class JwtAuthenticationFilter implements GlobalFilter {
             Claims claims = jwtUtil.validarToken(token);
 
             String username = claims.getSubject();
-            String rol = claims.get("groups").toString();
+
+            String rol = claims.get("groups").toString()
+                    .replace("[", "")
+                    .replace("]", "")
+                    .replace("\"", "")
+                    .trim();
 
             String metodo = exchange.getRequest().getMethod().name();
 
-            if (!metodo.equals("GET") && !rol.contains("ROLE_ADMIN")) {
-                exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
-                return exchange.getResponse().setComplete();
-            }
+            return permisoClient.obtenerPermisosPorRol(rol)
+                    .flatMap(permisos -> {
 
-            ServerWebExchange modifiedExchange = exchange.mutate()
-                    .request(builder -> builder
-                            .header("X-User-Name", username)
-                            .header("X-User-Role", rol)
-                    )
-                    .build();
+                        boolean permitido = validarPermiso(permisos, metodo, path);
 
-            return chain.filter(modifiedExchange);
+                        if (!permitido) {
+                            exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
+                            return exchange.getResponse().setComplete();
+                        }
+
+                        ServerWebExchange modifiedExchange = exchange.mutate()
+                                .request(builder -> builder
+                                        .header("X-User-Name", username)
+                                        .header("X-User-Role", rol)
+                                )
+                                .build();
+
+                        return chain.filter(modifiedExchange);
+                    })
+                    .onErrorResume(error -> {
+                        exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                        return exchange.getResponse().setComplete();
+                    });
 
         } catch (Exception e) {
             exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
             return exchange.getResponse().setComplete();
         }
+    }
+
+    private boolean validarPermiso(List<String> permisos, String metodo, String path) {
+
+        if (permisos == null || permisos.isEmpty()) {
+            return false;
+        }
+
+        return permisos.stream().anyMatch(permiso -> {
+            String[] partes = permiso.split(" ", 2);
+
+            if (partes.length < 2) {
+                return false;
+            }
+
+            String metodoPermiso = partes[0].trim();
+            String endpointPermiso = partes[1].trim();
+
+            if (!metodo.equalsIgnoreCase(metodoPermiso)) {
+                return false;
+            }
+
+            if (endpointPermiso.endsWith("/**")) {
+                String base = endpointPermiso.replace("/**", "");
+                return path.equals(base) || path.startsWith(base + "/");
+            }
+
+            return path.equals(endpointPermiso);
+        });
     }
 }
