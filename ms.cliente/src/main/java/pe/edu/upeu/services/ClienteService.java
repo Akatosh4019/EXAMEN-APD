@@ -12,6 +12,10 @@ public interface ClienteService {
 
     Cliente findById(Long id);
 
+    Cliente findByCorreo(String correo);
+
+    Cliente validarClienteActivo(Long id);
+
     Cliente update(Long id, Cliente cliente);
 
     void delete(Long id);

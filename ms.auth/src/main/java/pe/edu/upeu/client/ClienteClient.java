@@ -1,5 +1,6 @@
 package pe.edu.upeu.client;
 
+import jakarta.ws.rs.POST;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -10,11 +11,10 @@ import pe.edu.upeu.dto.ClienteDTO;
 @RegisterRestClient(configKey = "cliente-api")
 public interface ClienteClient {
 
-    @GET
-    @Path("/{id}")
-    ClienteDTO buscarClientePorId(@PathParam("id") Long id);
+    @POST
+    ClienteDTO crearCliente(ClienteDTO cliente);
 
     @GET
-    @Path("/{id}/validar")
-    ClienteDTO validarClienteActivo(@PathParam("id") Long id);
+    @Path("/correo/{correo}")
+    ClienteDTO buscarClientePorCorreo(@PathParam("correo") String correo);
 }

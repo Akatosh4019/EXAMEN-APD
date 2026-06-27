@@ -20,6 +20,9 @@ public class Usuario extends PanacheEntityBase {
     @Column(nullable = false, length = 20)
     public String rol;
 
+    @Column(name = "idcliente")
+    public Long idcliente;
+
     @Column(nullable = false)
     public Boolean estado = true;
 }

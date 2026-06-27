@@ -12,10 +12,19 @@ public class JwtService {
     private static final String SECRET = "MiClaveSuperSecretaParaJwtDebeTenerMinimo32Caracteres123456";
 
     public String generarToken(String username, String rol) {
-        return Jwt.issuer("ms-auth")
+        return generarToken(username, rol, null);
+    }
+
+    public String generarToken(String username, String rol, Long idcliente) {
+        var builder = Jwt.issuer("ms-auth")
                 .subject(username)
                 .groups(Set.of(rol))
-                .expiresIn(Duration.ofHours(1))
-                .signWithSecret(SECRET);
+                .expiresIn(Duration.ofHours(1));
+
+        if (idcliente != null) {
+            builder.claim("idcliente", idcliente);
+        }
+
+        return builder.signWithSecret(SECRET);
     }
 }

@@ -1,2 +1,2 @@
-INSERT INTO producto (nombre, precio, stock, estado) VALUES ('Laptop', 2500, 10, 'A');
-INSERT INTO producto (nombre, precio, stock, estado) VALUES ('Mouse', 50, 100, 'A');
+-- Los productos iniciales se cargan desde pe.edu.upeu.config.DataInitializer
+-- para evitar duplicados al reiniciar los contenedores.

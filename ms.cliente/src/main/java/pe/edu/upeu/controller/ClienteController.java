@@ -28,6 +28,18 @@ public class ClienteController {
         return service.findById(id);
     }
 
+    @GET
+    @Path("/correo/{correo}")
+    public Cliente getByCorreo(@PathParam("correo") String correo) {
+        return service.findByCorreo(correo);
+    }
+
+    @GET
+    @Path("/{id}/validar")
+    public Cliente validarClienteActivo(@PathParam("id") Long id) {
+        return service.validarClienteActivo(id);
+    }
+
     @POST
     public Cliente create(Cliente cliente) {
         return service.create(cliente);

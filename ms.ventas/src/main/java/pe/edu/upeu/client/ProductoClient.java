@@ -11,15 +11,27 @@ import pe.edu.upeu.dto.ProductoDTO;
 @RegisterRestClient(configKey = "producto-api")
 public interface ProductoClient {
 
-    // 🔹 Obtener producto
     @GET
     @Path("/{id}")
     ProductoDTO buscarProductoPorId(@PathParam("id") Long id);
 
-    // 🔥 NUEVO → Descontar stock
+    @GET
+    @Path("/{id}/validar-stock/{cantidad}")
+    ProductoDTO validarProductoDisponible(
+            @PathParam("id") Long id,
+            @PathParam("cantidad") int cantidad
+    );
+
     @PUT
-    @Path("/{id}/descontar/{cantidad}")
+    @Path("/{id}/descontar-stock/{cantidad}")
     ProductoDTO descontarStock(
+            @PathParam("id") Long id,
+            @PathParam("cantidad") int cantidad
+    );
+
+    @PUT
+    @Path("/{id}/restaurar-stock/{cantidad}")
+    ProductoDTO restaurarStock(
             @PathParam("id") Long id,
             @PathParam("cantidad") int cantidad
     );

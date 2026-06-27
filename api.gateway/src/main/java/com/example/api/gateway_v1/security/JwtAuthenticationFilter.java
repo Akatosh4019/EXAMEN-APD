@@ -25,7 +25,10 @@ public class JwtAuthenticationFilter implements GlobalFilter {
 
         String path = exchange.getRequest().getURI().getPath();
 
-        if (path.equals("/api/auth/login") || path.equals("/auth/login")) {
+        if (path.equals("/api/auth/login")
+                || path.equals("/auth/login")
+                || path.equals("/api/auth/register-cliente")
+                || path.equals("/auth/register-cliente")) {
             return chain.filter(exchange);
         }
 
@@ -45,6 +48,7 @@ public class JwtAuthenticationFilter implements GlobalFilter {
             Claims claims = jwtUtil.validarToken(token);
 
             String username = claims.getSubject();
+            Object idClienteClaim = claims.get("idcliente");
 
             String rol = claims.get("groups").toString()
                     .replace("[", "")
@@ -68,6 +72,7 @@ public class JwtAuthenticationFilter implements GlobalFilter {
                                 .request(builder -> builder
                                         .header("X-User-Name", username)
                                         .header("X-User-Role", rol)
+                                        .header("X-Cliente-Id", idClienteClaim == null ? "" : idClienteClaim.toString())
                                 )
                                 .build();
 
@@ -104,12 +109,17 @@ public class JwtAuthenticationFilter implements GlobalFilter {
                 return false;
             }
 
+            String pathSinApi = path.startsWith("/api/") ? path.substring(4) : path;
+
             if (endpointPermiso.endsWith("/**")) {
                 String base = endpointPermiso.replace("/**", "");
-                return path.equals(base) || path.startsWith(base + "/");
+                return path.equals(base)
+                        || path.startsWith(base + "/")
+                        || pathSinApi.equals(base)
+                        || pathSinApi.startsWith(base + "/");
             }
 
-            return path.equals(endpointPermiso);
+            return path.equals(endpointPermiso) || pathSinApi.equals(endpointPermiso);
         });
     }
 }

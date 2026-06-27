@@ -1,17 +1,21 @@
 package pe.edu.upeu.controller;
 
 import jakarta.inject.Inject;
-import jakarta.ws.rs.*;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HeaderParam;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import pe.edu.upeu.dto.ProductoDTO;
+import pe.edu.upeu.dto.SagaVentaResponse;
 import pe.edu.upeu.entity.Venta;
 import pe.edu.upeu.services.VentaService;
 
 import java.util.List;
-
-// 🔥 IMPORTS NUEVOS
-import org.eclipse.microprofile.rest.client.inject.RestClient;
-import pe.edu.upeu.client.ProductoClient;
 
 @Path("/ventas")
 @Produces(MediaType.APPLICATION_JSON)
@@ -21,18 +25,15 @@ public class VentaController {
     @Inject
     VentaService service;
 
-    // 🔥 CLIENTE PARA ms-producto
-    @Inject
-    @RestClient
-    ProductoClient productoClient;
-
-    // ======================
-    // CRUD NORMAL
-    // ======================
-
     @GET
     public List<Venta> list() {
         return service.findAll();
+    }
+
+    @GET
+    @Path("/mis-ventas")
+    public List<Venta> misVentas(@HeaderParam("X-Cliente-Id") Long idcliente) {
+        return service.findByCliente(idcliente);
     }
 
     @GET
@@ -46,6 +47,22 @@ public class VentaController {
         return service.create(venta);
     }
 
+    @POST
+    @Path("/saga")
+    public SagaVentaResponse realizarVentaSaga(Venta venta) {
+        return service.realizarVentaSaga(venta);
+    }
+
+    @POST
+    @Path("/saga/cliente")
+    public SagaVentaResponse realizarVentaSagaCliente(
+            @HeaderParam("X-Cliente-Id") Long idcliente,
+            Venta venta
+    ) {
+        venta.setIdcliente(idcliente);
+        return service.realizarVentaSaga(venta);
+    }
+
     @PUT
     @Path("/{id}")
     public Venta update(@PathParam("id") Long id, Venta venta) {
@@ -56,15 +73,5 @@ public class VentaController {
     @Path("/{id}")
     public void delete(@PathParam("id") Long id) {
         service.delete(id);
-    }
-
-    // ======================
-    // 🔥 PRUEBA MICROSERVICIO
-    // ======================
-
-    @GET
-    @Path("/test-producto")
-    public ProductoDTO testProducto() {
-        return productoClient.buscarProductoPorId(21L);
     }
 }

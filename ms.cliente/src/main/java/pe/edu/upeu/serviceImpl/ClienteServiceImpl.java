@@ -45,6 +45,28 @@ public class ClienteServiceImpl implements ClienteService {
     }
 
     @Override
+    public Cliente findByCorreo(String correo) {
+        Cliente c = repository.findByCorreo(correo);
+
+        if (c == null) {
+            throw new NotFoundException("Cliente no encontrado con correo: " + correo);
+        }
+
+        return c;
+    }
+
+    @Override
+    public Cliente validarClienteActivo(Long id) {
+        Cliente c = findById(id);
+
+        if (!"A".equals(c.getEstado())) {
+            throw new BadRequestException("Cliente inactivo con id: " + id);
+        }
+
+        return c;
+    }
+
+    @Override
     @Transactional
     public Cliente update(Long id, Cliente cliente) {
         Cliente entity = repository.findById(id);

@@ -1,0 +1,332 @@
+﻿{
+  "info": {
+    "_postman_id": "00f76215-7508-4c1a-9c86-8ff056f6fb18",
+    "name": "Proyecto Quarkus - Gateway, CRUD y Saga",
+    "description": "Coleccion completa: login, health, CRUD normal por API Gateway, Saga exitosa, errores funcionales y compensacion.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "00 - LOGIN",
+      "item": [
+        {
+          "name": "Login admin por gateway - guarda token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Login OK', function () { pm.response.to.have.status(200); });",
+                  "const data = pm.response.json();",
+                  "pm.environment.set('token', data.token);",
+                  "pm.test('Token guardado', function () { pm.expect(data.token).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}" },
+            "url": { "raw": "http://localhost:8030/api/auth/login", "host": ["http://localhost:8030"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "Login admin directo ms-auth - opcional",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Login directo OK', function () { pm.response.to.have.status(200); });",
+                  "const data = pm.response.json();",
+                  "pm.environment.set('token', data.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}" },
+            "url": { "raw": "http://localhost:8084/auth/login", "host": ["http://localhost:8084"], "path": ["auth", "login"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "01 - HEALTH",
+      "item": [
+        {
+          "name": "Health ms-auth",
+          "request": { "method": "GET", "header": [], "url": { "raw": "http://localhost:8084/q/health", "host": ["http://localhost:8084"], "path": ["q", "health"] } }
+        },
+        {
+          "name": "Health ms-cliente",
+          "request": { "method": "GET", "header": [], "url": { "raw": "http://localhost:8082/q/health", "host": ["http://localhost:8082"], "path": ["q", "health"] } }
+        },
+        {
+          "name": "Health ms-producto",
+          "request": { "method": "GET", "header": [], "url": { "raw": "http://localhost:8080/q/health", "host": ["http://localhost:8080"], "path": ["q", "health"] } }
+        },
+        {
+          "name": "Health ms-ventas",
+          "request": { "method": "GET", "header": [], "url": { "raw": "http://localhost:8083/q/health", "host": ["http://localhost:8083"], "path": ["q", "health"] } }
+        }
+      ]
+    },
+    {
+      "name": "02 - CRUD CLIENTES por Gateway",
+      "item": [
+        {
+          "name": "Listar clientes",
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "http://localhost:8030/api/clientes", "host": ["http://localhost:8030"], "path": ["api", "clientes"] } }
+        },
+        {
+          "name": "Crear cliente y guardar ID",
+          "event": [
+            { "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Cliente creado', function () { pm.response.to.have.status(200); });", "const data = pm.response.json();", "if (data.idcliente) pm.environment.set('cliente_id', data.idcliente);"] } }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombres\": \"Cliente\",\n  \"apellidos\": \"Gateway\",\n  \"correo\": \"cliente.gateway.{{$timestamp}}@test.com\",\n  \"telefono\": \"999999999\",\n  \"estado\": \"A\"\n}" },
+            "url": { "raw": "http://localhost:8030/api/clientes", "host": ["http://localhost:8030"], "path": ["api", "clientes"] }
+          }
+        },
+        {
+          "name": "Buscar cliente por ID",
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "http://localhost:8030/api/clientes/{{cliente_id}}", "host": ["http://localhost:8030"], "path": ["api", "clientes", "{{cliente_id}}"] } }
+        },
+        {
+          "name": "Actualizar cliente",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombres\": \"Cliente Actualizado\",\n  \"apellidos\": \"Gateway\",\n  \"correo\": \"cliente.actualizado.{{$timestamp}}@test.com\",\n  \"telefono\": \"988888888\",\n  \"estado\": \"A\"\n}" },
+            "url": { "raw": "http://localhost:8030/api/clientes/{{cliente_id}}", "host": ["http://localhost:8030"], "path": ["api", "clientes", "{{cliente_id}}"] }
+          }
+        },
+        {
+          "name": "Desactivar cliente",
+          "request": { "method": "PUT", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "http://localhost:8030/api/clientes/{{cliente_id}}/desactivar", "host": ["http://localhost:8030"], "path": ["api", "clientes", "{{cliente_id}}", "desactivar"] } }
+        },
+        {
+          "name": "Activar cliente",
+          "request": { "method": "PUT", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "http://localhost:8030/api/clientes/{{cliente_id}}/activar", "host": ["http://localhost:8030"], "path": ["api", "clientes", "{{cliente_id}}", "activar"] } }
+        },
+        {
+          "name": "Eliminar cliente",
+          "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "http://localhost:8030/api/clientes/{{cliente_id}}", "host": ["http://localhost:8030"], "path": ["api", "clientes", "{{cliente_id}}"] } }
+        }
+      ]
+    },
+    {
+      "name": "03 - CRUD PRODUCTOS por Gateway",
+      "item": [
+        {
+          "name": "Listar productos",
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "http://localhost:8030/api/productos", "host": ["http://localhost:8030"], "path": ["api", "productos"] } }
+        },
+        {
+          "name": "Crear producto y guardar ID",
+          "event": [
+            { "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Producto creado', function () { pm.response.to.have.status(200); });", "const data = pm.response.json();", "if (data.idproducto) pm.environment.set('producto_id', data.idproducto);"] } }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Producto Gateway {{$timestamp}}\",\n  \"precio\": 120.0,\n  \"stock\": 20,\n  \"estado\": \"A\"\n}" },
+            "url": { "raw": "http://localhost:8030/api/productos", "host": ["http://localhost:8030"], "path": ["api", "productos"] }
+          }
+        },
+        {
+          "name": "Buscar producto por ID",
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "http://localhost:8030/api/productos/{{producto_id}}", "host": ["http://localhost:8030"], "path": ["api", "productos", "{{producto_id}}"] } }
+        },
+        {
+          "name": "Actualizar producto",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Producto Actualizado {{$timestamp}}\",\n  \"precio\": 150.0,\n  \"stock\": 25,\n  \"estado\": \"A\"\n}" },
+            "url": { "raw": "http://localhost:8030/api/productos/{{producto_id}}", "host": ["http://localhost:8030"], "path": ["api", "productos", "{{producto_id}}"] }
+          }
+        },
+        {
+          "name": "Descontar stock manual",
+          "request": { "method": "PUT", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "http://localhost:8030/api/productos/{{producto_id}}/descontar/{{cantidad}}", "host": ["http://localhost:8030"], "path": ["api", "productos", "{{producto_id}}", "descontar", "{{cantidad}}"] } }
+        },
+        {
+          "name": "Aumentar stock manual",
+          "request": { "method": "PUT", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "http://localhost:8030/api/productos/{{producto_id}}/aumentar/{{cantidad}}", "host": ["http://localhost:8030"], "path": ["api", "productos", "{{producto_id}}", "aumentar", "{{cantidad}}"] } }
+        },
+        {
+          "name": "Desactivar producto",
+          "request": { "method": "PUT", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "http://localhost:8030/api/productos/{{producto_id}}/desactivar", "host": ["http://localhost:8030"], "path": ["api", "productos", "{{producto_id}}", "desactivar"] } }
+        },
+        {
+          "name": "Activar producto",
+          "request": { "method": "PUT", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "http://localhost:8030/api/productos/{{producto_id}}/activar", "host": ["http://localhost:8030"], "path": ["api", "productos", "{{producto_id}}", "activar"] } }
+        },
+        {
+          "name": "Eliminar producto",
+          "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "http://localhost:8030/api/productos/{{producto_id}}", "host": ["http://localhost:8030"], "path": ["api", "productos", "{{producto_id}}"] } }
+        }
+      ]
+    },
+    {
+      "name": "04 - CRUD VENTAS por Gateway",
+      "item": [
+        {
+          "name": "Listar ventas",
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "http://localhost:8030/api/ventas", "host": ["http://localhost:8030"], "path": ["api", "ventas"] } }
+        },
+        {
+          "name": "Buscar venta por ID",
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "http://localhost:8030/api/ventas/{{venta_id}}", "host": ["http://localhost:8030"], "path": ["api", "ventas", "{{venta_id}}"] } }
+        },
+        {
+          "name": "Crear venta normal por gateway",
+          "event": [
+            { "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Venta creada', function () { pm.response.to.have.status(200); });", "const data = pm.response.json();", "if (data.idventa) pm.environment.set('venta_id', data.idventa);"] } }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"idcliente\": {{cliente_id}},\n  \"idproducto\": {{producto_id}},\n  \"cantidad\": {{cantidad}}\n}" },
+            "url": { "raw": "http://localhost:8030/api/ventas", "host": ["http://localhost:8030"], "path": ["api", "ventas"] }
+          }
+        },
+        {
+          "name": "Actualizar venta",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"idcliente\": {{cliente_id}},\n  \"idproducto\": {{producto_id}},\n  \"cantidad\": {{cantidad}},\n  \"total\": 120.0,\n  \"estado\": \"A\"\n}" },
+            "url": { "raw": "http://localhost:8030/api/ventas/{{venta_id}}", "host": ["http://localhost:8030"], "path": ["api", "ventas", "{{venta_id}}"] }
+          }
+        },
+        {
+          "name": "Eliminar venta",
+          "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "http://localhost:8030/api/ventas/{{venta_id}}", "host": ["http://localhost:8030"], "path": ["api", "ventas", "{{venta_id}}"] } }
+        }
+      ]
+    },
+    {
+      "name": "05 - SAGA EXITOSA por Gateway",
+      "item": [
+        {
+          "name": "Guardar stock antes",
+          "event": [
+            { "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Stock capturado', function () { pm.response.to.have.status(200); });", "pm.environment.set('stock_before', pm.response.json().stock);"] } }
+          ],
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "http://localhost:8030/api/productos/{{producto_id}}", "host": ["http://localhost:8030"], "path": ["api", "productos", "{{producto_id}}"] } }
+        },
+        {
+          "name": "Realizar venta Saga",
+          "event": [
+            { "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Saga completada', function () { pm.response.to.have.status(200); });", "const data = pm.response.json();", "pm.expect(data.estado).to.eql('COMPLETADA');", "if (data.venta && data.venta.idventa) pm.environment.set('venta_id', data.venta.idventa);"] } }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"idcliente\": {{cliente_id}},\n  \"idproducto\": {{producto_id}},\n  \"cantidad\": {{cantidad}}\n}" },
+            "url": { "raw": "http://localhost:8030/api/ventas/saga", "host": ["http://localhost:8030"], "path": ["api", "ventas", "saga"] }
+          }
+        },
+        {
+          "name": "Verificar stock descontado",
+          "event": [
+            { "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Stock descontado', function () {", "  pm.response.to.have.status(200);", "  const before = Number(pm.environment.get('stock_before'));", "  const cantidad = Number(pm.environment.get('cantidad'));", "  pm.expect(pm.response.json().stock).to.eql(before - cantidad);", "});"] } }
+          ],
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "http://localhost:8030/api/productos/{{producto_id}}", "host": ["http://localhost:8030"], "path": ["api", "productos", "{{producto_id}}"] } }
+        },
+        {
+          "name": "Listar ventas",
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "http://localhost:8030/api/ventas", "host": ["http://localhost:8030"], "path": ["api", "ventas"] } }
+        }
+      ]
+    },
+    {
+      "name": "06 - ERRORES FUNCIONALES por Gateway",
+      "item": [
+        {
+          "name": "Error stock insuficiente",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"idcliente\": {{cliente_id}},\n  \"idproducto\": {{producto_id}},\n  \"cantidad\": {{cantidad_error}}\n}" },
+            "url": { "raw": "http://localhost:8030/api/ventas/saga", "host": ["http://localhost:8030"], "path": ["api", "ventas", "saga"] }
+          }
+        },
+        {
+          "name": "Desactivar cliente",
+          "request": { "method": "PUT", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "http://localhost:8030/api/clientes/{{cliente_id}}/desactivar", "host": ["http://localhost:8030"], "path": ["api", "clientes", "{{cliente_id}}", "desactivar"] } }
+        },
+        {
+          "name": "Error cliente inactivo",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"idcliente\": {{cliente_id}},\n  \"idproducto\": {{producto_id}},\n  \"cantidad\": {{cantidad}}\n}" },
+            "url": { "raw": "http://localhost:8030/api/ventas/saga", "host": ["http://localhost:8030"], "path": ["api", "ventas", "saga"] }
+          }
+        },
+        {
+          "name": "Reactivar cliente",
+          "request": { "method": "PUT", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "http://localhost:8030/api/clientes/{{cliente_id}}/activar", "host": ["http://localhost:8030"], "path": ["api", "clientes", "{{cliente_id}}", "activar"] } }
+        },
+        {
+          "name": "Desactivar producto",
+          "request": { "method": "PUT", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "http://localhost:8030/api/productos/{{producto_id}}/desactivar", "host": ["http://localhost:8030"], "path": ["api", "productos", "{{producto_id}}", "desactivar"] } }
+        },
+        {
+          "name": "Error producto inactivo",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"idcliente\": {{cliente_id}},\n  \"idproducto\": {{producto_id}},\n  \"cantidad\": {{cantidad}}\n}" },
+            "url": { "raw": "http://localhost:8030/api/ventas/saga", "host": ["http://localhost:8030"], "path": ["api", "ventas", "saga"] }
+          }
+        },
+        {
+          "name": "Reactivar producto",
+          "request": { "method": "PUT", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "http://localhost:8030/api/productos/{{producto_id}}/activar", "host": ["http://localhost:8030"], "path": ["api", "productos", "{{producto_id}}", "activar"] } }
+        }
+      ]
+    },
+    {
+      "name": "07 - COMPENSACION SAGA",
+      "description": "Para simular compensacion: ejecuta Guardar stock, luego en PowerShell docker stop postgres-local, luego Simular falla, luego Verificar stock restaurado, y al final docker start postgres-local.",
+      "item": [
+        {
+          "name": "Guardar stock antes de compensacion",
+          "event": [
+            { "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Stock antes capturado', function () { pm.response.to.have.status(200); });", "pm.environment.set('stock_before', pm.response.json().stock);"] } }
+          ],
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "http://localhost:8030/api/productos/{{producto_id}}", "host": ["http://localhost:8030"], "path": ["api", "productos", "{{producto_id}}"] } }
+        },
+        {
+          "name": "Simular falla despues del descuento",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"idcliente\": {{cliente_id}},\n  \"idproducto\": {{producto_id}},\n  \"cantidad\": {{cantidad}}\n}" },
+            "url": { "raw": "http://localhost:8030/api/ventas/saga", "host": ["http://localhost:8030"], "path": ["api", "ventas", "saga"] }
+          }
+        },
+        {
+          "name": "Verificar stock restaurado",
+          "event": [
+            { "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Stock restaurado', function () {", "  pm.response.to.have.status(200);", "  const before = Number(pm.environment.get('stock_before'));", "  pm.expect(pm.response.json().stock).to.eql(before);", "});"] } }
+          ],
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "http://localhost:8030/api/productos/{{producto_id}}", "host": ["http://localhost:8030"], "path": ["api", "productos", "{{producto_id}}"] } }
+        }
+      ]
+    }
+  ]
+}
+

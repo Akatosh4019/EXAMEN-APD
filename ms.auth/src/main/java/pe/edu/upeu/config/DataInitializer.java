@@ -5,11 +5,19 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.WebApplicationException;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.jboss.logging.Logger;
+import pe.edu.upeu.client.ClienteClient;
+import pe.edu.upeu.dto.ClienteDTO;
 import pe.edu.upeu.entity.*;
 import pe.edu.upeu.repository.*;
 
 @ApplicationScoped
 public class DataInitializer {
+
+    private static final Logger LOG = Logger.getLogger(DataInitializer.class);
+    private static final String ADMIN_CORREO = "admin@saga.local";
 
     @Inject
     UsuarioRepository usuarioRepository;
@@ -26,6 +34,10 @@ public class DataInitializer {
     @Inject
     RolPermisoRepository rolPermisoRepository;
 
+    @Inject
+    @RestClient
+    ClienteClient clienteClient;
+
     @Transactional
     void onStart(@Observes StartupEvent event) {
 
@@ -34,9 +46,9 @@ public class DataInitializer {
                 "Administrador con acceso total"
         );
 
-        Rol userRol = crearRolSiNoExiste(
-                "ROLE_USER",
-                "Usuario con acceso limitado"
+        Rol clienteRol = crearRolSiNoExiste(
+                "ROLE_CLIENTE",
+                "Cliente con acceso para consultar productos y comprar"
         );
 
         Usuario admin = crearUsuarioSiNoExiste(
@@ -44,6 +56,8 @@ public class DataInitializer {
                 "admin123",
                 "ROLE_ADMIN"
         );
+
+        asociarClienteAdminSiEsPosible(admin);
 
         asignarRolSiNoExiste(admin, adminRol);
 
@@ -67,6 +81,10 @@ public class DataInitializer {
         crearPermisoYAsignarAdmin(adminRol, "ASIGNAR_ROL_USUARIO", "POST", "/auth/seguridad/usuarios/asignar-rol");
         crearPermisoYAsignarAdmin(adminRol, "ASIGNAR_PERMISO_ROL", "POST", "/auth/seguridad/roles/asignar-permiso");
         crearPermisoYAsignarAdmin(adminRol, "VER_PERMISOS_ROL", "GET", "/auth/seguridad/roles/**");
+
+        crearPermisoYAsignarRol(clienteRol, "CLIENTE_VER_PRODUCTOS", "GET", "/productos/**");
+        crearPermisoYAsignarRol(clienteRol, "CLIENTE_COMPRAR", "POST", "/ventas/**");
+        crearPermisoYAsignarRol(clienteRol, "CLIENTE_VER_MIS_VENTAS", "GET", "/ventas/mis-ventas");
     }
 
     private Rol crearRolSiNoExiste(String nombre, String descripcion) {
@@ -98,6 +116,38 @@ public class DataInitializer {
         return usuario;
     }
 
+    private void asociarClienteAdminSiEsPosible(Usuario admin) {
+        if (admin.idcliente != null) {
+            return;
+        }
+
+        try {
+            ClienteDTO clienteAdmin = obtenerOCrearClienteAdmin();
+            admin.idcliente = clienteAdmin.idcliente;
+            LOG.infof("Usuario admin asociado al cliente %d", admin.idcliente);
+        } catch (Exception e) {
+            LOG.warnf("No se pudo crear/asociar el cliente del admin durante el arranque: %s", e.getMessage());
+        }
+    }
+
+    private ClienteDTO obtenerOCrearClienteAdmin() {
+        try {
+            return clienteClient.buscarClientePorCorreo(ADMIN_CORREO);
+        } catch (WebApplicationException e) {
+            if (e.getResponse() == null || e.getResponse().getStatus() != 404) {
+                throw e;
+            }
+        }
+
+        ClienteDTO cliente = new ClienteDTO();
+        cliente.nombres = "Administrador";
+        cliente.apellidos = "General";
+        cliente.correo = ADMIN_CORREO;
+        cliente.telefono = "999999999";
+        cliente.estado = "A";
+        return clienteClient.crearCliente(cliente);
+    }
+
     private void asignarRolSiNoExiste(Usuario usuario, Rol rol) {
         boolean existe = usuarioRolRepository
                 .find("usuario.id = ?1 and rol.id = ?2", usuario.id, rol.id)
@@ -112,6 +162,10 @@ public class DataInitializer {
     }
 
     private void crearPermisoYAsignarAdmin(Rol adminRol, String nombre, String metodo, String endpoint) {
+        crearPermisoYAsignarRol(adminRol, nombre, metodo, endpoint);
+    }
+
+    private void crearPermisoYAsignarRol(Rol rol, String nombre, String metodo, String endpoint) {
         Permiso permiso = permisoRepository.find("nombre", nombre).firstResult();
 
         if (permiso == null) {
@@ -124,12 +178,12 @@ public class DataInitializer {
         }
 
         boolean asignado = rolPermisoRepository
-                .find("rol.id = ?1 and permiso.id = ?2", adminRol.id, permiso.id)
+                .find("rol.id = ?1 and permiso.id = ?2", rol.id, permiso.id)
                 .firstResult() != null;
 
         if (!asignado) {
             RolPermiso rolPermiso = new RolPermiso();
-            rolPermiso.rol = adminRol;
+            rolPermiso.rol = rol;
             rolPermiso.permiso = permiso;
             rolPermisoRepository.persist(rolPermiso);
         }

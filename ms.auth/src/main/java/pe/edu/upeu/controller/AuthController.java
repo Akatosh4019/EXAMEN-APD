@@ -5,6 +5,8 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import pe.edu.upeu.dto.LoginRequest;
 import pe.edu.upeu.dto.LoginResponse;
+import pe.edu.upeu.dto.RegistroClienteRequest;
+import pe.edu.upeu.dto.RegistroClienteResponse;
 import pe.edu.upeu.services.AuthService;
 
 @Path("/auth")
@@ -19,5 +21,11 @@ public class AuthController {
     @Path("/login")
     public LoginResponse login(LoginRequest request) {
         return authService.login(request);
+    }
+
+    @POST
+    @Path("/register-cliente")
+    public RegistroClienteResponse registrarCliente(RegistroClienteRequest request) {
+        return authService.registrarCliente(request);
     }
 }

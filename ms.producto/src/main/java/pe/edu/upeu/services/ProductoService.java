@@ -15,7 +15,11 @@ public interface ProductoService {
 
     List<Producto> findAll();
 
+    Producto validarProductoDisponible(Long id, int cantidad);
+
     Producto descontarStock(Long id, int cantidad);
+
+    Producto restaurarStock(Long id, int cantidad);
 
     Producto desactivar(Long id);
 
